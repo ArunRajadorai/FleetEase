@@ -1,16 +1,33 @@
 # services/userservice.py
+from typing import List
+
 from sqlalchemy.orm import Session
-from ..schemas.userschema import UserCreate, UserUpdate, Login
+from ..schemas.userschema import UserCreate, UserUpdate, Login, UserProfileResponse, UserVehicleResponse
 from ..repositories.userRepository import UserRepository
 from ..utils.authhandler import create_access_token, get_password_hash, verify_password
 from ..utils.logger import setup_logger
 
 logger = setup_logger(__name__)
 
+
 class UserService:
     def __init__(self, user_repository: UserRepository):
         self.user_repository = user_repository
         logger.debug("UserService initialized")
+
+    def get_vehicles_with_refurb_status(self, user_id: int) -> List[UserVehicleResponse]:
+        user_vehicles = self.user_repository.get_vehicles_with_refurb_status(user_id)
+        return [UserVehicleResponse(**vehicle) for vehicle in user_vehicles]
+
+    def get_user_by_id(self, user_id: int):
+        user = self.user_repository.get_user_by_id(user_id)
+        if user:
+            return UserProfileResponse(
+                name=user.username,
+                email=user.email,
+                phone=user.mobile_number
+            )
+        return None
 
     def get_user_by_username(self, username: str):
         """Retrieve a user by their username."""
@@ -20,10 +37,6 @@ class UserService:
     def add_user(self, user: UserCreate):
         """Add a new user with a hashed password."""
         logger.debug(f"Adding user with username: {user.username}")
-        existing_user = self.get_user_by_username(user.username)
-        if existing_user:
-            logger.error("Username already registered")
-            raise ValueError("Username already registered")
 
         hashed_password = get_password_hash(user.password)
         user.password = hashed_password
@@ -51,7 +64,7 @@ class UserService:
 
         access_token = self.create_access_token(data={"sub": username})
         logger.debug(f"User logged in, token created: {access_token}")
-        return {"access_token": access_token, "token_type": "bearer"}
+        return {"id": user.id, "access_token": access_token, "token_type": "bearer"}
 
     def update_user(self, user_id: int, user_update: UserUpdate):
         """Update user information."""

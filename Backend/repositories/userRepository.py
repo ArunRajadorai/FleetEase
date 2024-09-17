@@ -1,7 +1,13 @@
 # repositories/userRepository.py
+from typing import List, Dict, Optional
+
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
+
+from ..models.refurb import Refurbishment
 from ..models.user import User
+from ..models.vehicle import Vehicle
 from ..schemas.userschema import UserCreate, UserUpdate
 from ..utils.logger import setup_logger
 
@@ -12,6 +18,13 @@ class UserRepository:
     def __init__(self, db: Session):
         self.db = db
         logger.debug("UserRepository initialized")
+
+    def get_user_by_id(self, user_id: int):
+        try:
+            return self.db.query(User).filter(User.id == user_id).one_or_none()
+        except NoResultFound:
+            logger.warning(f"No user found with username: {user_id}")
+            return None
 
     def get_user_by_username(self, username: str):
         """Retrieve a user by their username."""
@@ -24,14 +37,48 @@ class UserRepository:
             logger.warning(f"No user found with username: {username}")
             return None
 
+    def get_vehicles_with_refurb_status(self, user_id: int) -> List[Dict[str, Optional[str]]]:
+        query = (
+            self.db.query(
+                Vehicle.vehicle_name.label('name'),
+                func.concat(Vehicle.make, ' ', Vehicle.model).label('make_model'),
+                Vehicle.year.label('year'),
+                func.date(Vehicle.created_at).label('date'),
+                Refurbishment.status.label('status')
+            )
+            .outerjoin(Refurbishment, Vehicle.vehicle_id == Refurbishment.vehicle_id)
+            .filter(Vehicle.user_id == user_id)
+            .all()
+        )
+
+        results = []
+        for row in query:
+            if row.status:
+                results.append({
+                    'name': row.name,
+                    'make_model': row.make_model,
+                    'year': row.year,
+                    'date': row.date.isoformat() if row.date else None,  # Format date
+                    'status': 'Refurbishment-'+row.status
+                })
+            else:
+                results.append({
+                    'name': row.name,
+                    'make_model': row.make_model,
+                    'year': row.year,
+                    'date': row.date.isoformat() if row.date else None,
+                    'status': 'OwnerShip'
+                })
+
+        return results
     def create_user(self, user: UserCreate):
         """Create a new user record."""
         logger.debug(f"Creating user with username: {user.username}")
         db_user = User(
             username=user.username,
             hashed_password=user.password,  # Assuming user.password is hashed already
-            address=user.address,
-            mobile_number=user.mobile_number,
+            email=user.email,
+            mobile_number=str(user.mobile_number),
             user_type=user.user_type
         )
         self.db.add(db_user)

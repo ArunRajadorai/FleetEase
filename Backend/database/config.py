@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, MetaData, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:arun2398@localhost/fastapidb"
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:arun2398@localhost/fleetease"
 
 try:
     engine = create_engine(SQLALCHEMY_DATABASE_URL)
@@ -15,6 +15,7 @@ except Exception as e:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+#arun2398 localhost
 def get_db():
     db = SessionLocal()
     try:
@@ -26,3 +27,4 @@ def get_db():
 Base = declarative_base()
 
 Base.metadata.create_all(bind=engine)
+

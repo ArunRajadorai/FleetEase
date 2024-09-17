@@ -7,8 +7,8 @@ Base = declarative_base()
 
 
 class UserTypeEnum(PyEnum):
-    SELLER = "seller"
-    BUYER = "buyer"
+    seller = "seller"
+    buyer = "buyer"
 
 
 class User(Base):
@@ -19,6 +19,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     address = Column(String, nullable=True)
     mobile_number = Column(String, nullable=True)
+    email = Column(String, nullable=True)
     user_type = Column(Enum(UserTypeEnum), nullable=False)
 
     def __repr__(self):

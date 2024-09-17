@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
-from ..schemas.refurbschema import RefurbishmentCreate, RefurbishmentUpdate
-from ..repositories.refurbrepository import RefurbishmentRepository
+from ..schemas.refurbschema import RefurbishmentCreate
+from ..repositories.refurbrepository import RefurbRepository
+
 
 class RefurbService:
-    def __init__(self, refurbishment_repository: RefurbishmentRepository):
+    def __init__(self, refurbishment_repository: RefurbRepository):
         self.refurbishment_repository = refurbishment_repository
 
     def create_refurbishment(self, refurbishment: RefurbishmentCreate):
@@ -14,9 +15,3 @@ class RefurbService:
 
     def get_refurbishments_by_user(self, user_id: int):
         return self.refurbishment_repository.get_refurbishments_by_user(user_id)
-
-    def update_refurbishment(self, refurbishment_id: int, refurbishment_update: RefurbishmentUpdate):
-        return self.refurbishment_repository.update_refurbishment(refurbishment_id, refurbishment_update)
-
-    def delete_refurbishment(self, refurbishment_id: int):
-        return self.refurbishment_repository.delete_refurbishment(refurbishment_id)
