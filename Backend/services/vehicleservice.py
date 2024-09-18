@@ -112,6 +112,19 @@ class VehicleService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
+    def process_purchase(self, vehicle_id: int, buyer_id: int) -> bool:
+        vehicle = self.repository.get_vehicle_by_id(vehicle_id)
+
+        if vehicle is None:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+
+        # Example: Update the vehicle status to "sold" or similar
+        vehicle.status = 'Purchased'
+        vehicle.user_id = buyer_id
+
+        success = self.repository.update_vehicle(vehicle)
+        return success
+
     def filter_vehicles(self, make, model, year,
                         minPrice,
                         maxPrice,transmission) -> List[VehicleRead]:

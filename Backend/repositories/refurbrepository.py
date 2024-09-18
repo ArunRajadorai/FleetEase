@@ -4,6 +4,7 @@ import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound, SQLAlchemyError
 from ..models.refurb import Refurbishment
+from ..models.vehicle import Vehicle
 from ..schemas.refurbschema import RefurbishmentCreate, RefurbishmentCreateResponse
 
 
@@ -13,7 +14,7 @@ class RefurbRepository:
 
     def create_refurbishment(self, refurbishment: RefurbishmentCreate):
         try:
-
+            # Create a new Refurbishment record
             db_refurbishment = Refurbishment(
                 user_id=refurbishment.user_id,
                 vehicle_id=refurbishment.vehicle_id,
@@ -21,9 +22,15 @@ class RefurbRepository:
                 service_type=refurbishment.service_type,
                 status=refurbishment.status,
                 created_at=datetime.datetime.now()
-
             )
             self.db.add(db_refurbishment)
+
+            # Update the status in the Vehicle table
+            self.db.query(Vehicle).filter(Vehicle.vehicle_id == refurbishment.vehicle_id).update(
+                {Vehicle.status: 'Refurbishment Scheduled'}
+            )
+
+            # Commit the changes
             self.db.commit()
             self.db.refresh(db_refurbishment)
             return RefurbishmentCreateResponse(refurbishment_id=db_refurbishment.refurbishment_id)

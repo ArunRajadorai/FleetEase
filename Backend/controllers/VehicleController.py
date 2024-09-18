@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..schemas.buyerschema import VehicleBuyerRequest
 from ..schemas.filterschema import VehicleFilterRequest
-from ..schemas.vehicleschema import VehicleCreate
+from ..schemas.vehicleschema import VehicleCreate, PurchaseRequest
 from ..services.vehicleservice import VehicleService
 from ..repositories.vehicleRepository import VehicleRepository
 from ..database.config import get_db
@@ -71,6 +71,21 @@ def fetch_vehicles(request: VehicleBuyerRequest,
         return ApiResponse(data=vehicles, message="Vehicles retrieved successfully", success=True)
     except Exception as e:
         return ApiResponse(data=[], message=str(e), success=False)
+
+
+@vehicle_router.post("/purchase_vehicle", response_model=ApiResponse)
+def purchase_vehicle(request: PurchaseRequest,
+                     vehicle_service: VehicleService = Depends(get_vehicle_service)):  # Service dependency
+    try:
+        vehicle_id = request.vehicleId
+        buyer_id = request.userId
+        success = vehicle_service.process_purchase(vehicle_id, buyer_id)
+        if success:
+            return ApiResponse(data={}, message="Purchase successful", success=True)
+        else:
+            return ApiResponse(data={}, message="Purchase failed", success=False)
+    except Exception as e:
+        return ApiResponse(data={}, message=str(e), success=False)
 
 
 @vehicle_router.post("/create_vehicle", response_model=ApiResponse)

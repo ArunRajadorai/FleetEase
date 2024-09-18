@@ -2,7 +2,7 @@ import json
 from typing import List, Optional, Type, Dict, Any, Sequence
 
 from fastapi import HTTPException
-from sqlalchemy import select, Row
+from sqlalchemy import select, Row, func
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from ..schemas.vehicleschema import VehicleCreate, VehicleRead
@@ -57,6 +57,16 @@ class VehicleRepository:
         except SQLAlchemyError as e:
             print(f"Error fetching vehicle {vehicle_id}: {e}")
             return None
+
+    def update_vehicle(self, vehicle: Vehicle):
+        try:
+            self.db.add(vehicle)
+            self.db.commit()
+            return True
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            print(f"Error updating vehicle: {e}")
+            return False
 
     async def add_vehicle(self, vehicle_data: VehicleCreate, img_urls: List[str], user_id) -> VehicleRead | None:
         try:
@@ -145,16 +155,16 @@ class VehicleRepository:
             print(f"Error fetching vehicles for user {buyer_id}: {e}")
             return []
 
-    def filter_vehicles(self, make, model, year,
-                        minPrice,
-                        maxPrice, transmission) -> list[Type[Vehicle]] | list[Any]:
+    def filter_vehicles(self, make: str, model: str, year: int,
+                        minPrice: float, maxPrice: float, transmission: str) -> List[Type[Vehicle]] | List[Any]:
         try:
             query = self.db.query(Vehicle)
 
             if make is not None:
-                query = query.filter(Vehicle.make == make)
+                # Convert both the column and the filter value to lower case for case-insensitive comparison
+                query = query.filter(func.lower(Vehicle.make) == func.lower(make))
             if model is not None:
-                query = query.filter(Vehicle.model == model)
+                query = query.filter(func.lower(Vehicle.model) == func.lower(model))
             if year is not None and year != 0:
                 query = query.filter(Vehicle.year == year)
             if transmission is not None:
@@ -167,5 +177,5 @@ class VehicleRepository:
             return query.all()
         except SQLAlchemyError as e:
             self.db.rollback()
-            print(f"Error deleting vehicle: {e}")
+            print(f"Error filtering vehicles: {e}")
             return []

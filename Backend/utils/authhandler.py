@@ -1,10 +1,12 @@
 # auth.py
+import secrets
+
 import bcrypt
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from typing import Optional
 
-SECRET_KEY = "your-secret-key"  # Replace with your actual secret key
+SECRET_KEY = secrets.token_urlsafe(32)  # Replace with your actual secret key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

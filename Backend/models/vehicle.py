@@ -21,3 +21,4 @@ class Vehicle(Base):
     img_src = Column(String)
     created_at = Column(DATETIME, default=func.now())
     transmission = Column(String)
+    status = Column(String)

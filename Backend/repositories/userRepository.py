@@ -44,31 +44,21 @@ class UserRepository:
                 func.concat(Vehicle.make, ' ', Vehicle.model).label('make_model'),
                 Vehicle.year.label('year'),
                 func.date(Vehicle.created_at).label('date'),
-                Refurbishment.status.label('status')
+                Vehicle.status.label('status')
             )
-            .outerjoin(Refurbishment, Vehicle.vehicle_id == Refurbishment.vehicle_id)
             .filter(Vehicle.user_id == user_id)
             .all()
         )
 
         results = []
         for row in query:
-            if row.status:
-                results.append({
-                    'name': row.name,
-                    'make_model': row.make_model,
-                    'year': row.year,
-                    'date': row.date.isoformat() if row.date else None,  # Format date
-                    'status': 'Refurbishment-'+row.status
-                })
-            else:
-                results.append({
-                    'name': row.name,
-                    'make_model': row.make_model,
-                    'year': row.year,
-                    'date': row.date.isoformat() if row.date else None,
-                    'status': 'OwnerShip'
-                })
+            results.append({
+                'name': row.name,
+                'make_model': row.make_model,
+                'year': row.year,
+                'date': row.date.isoformat() if row.date else None,  # Format date
+                'status': row.status or 'Ownership'  # Use the status field directly or default to 'Ownership'
+            })
 
         return results
     def create_user(self, user: UserCreate):

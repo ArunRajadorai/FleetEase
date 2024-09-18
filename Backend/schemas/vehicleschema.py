@@ -77,3 +77,8 @@ class FilterVehicle(BaseModel):
     vehicle_sale_price: int
     vehicle_img_src: str
     attributes: List[Any]
+
+
+class PurchaseRequest(BaseModel):
+    vehicleId: int
+    userId: int
